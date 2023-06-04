@@ -12,13 +12,15 @@ initSqlJs().then(SQL => {
     .then(data => {
 
       // Create database schema and tables
-      db.exec('CREATE TABLE IF NOT EXISTS hardlooptijden (date date, distance numeric, run_time time without time zone)');
+      db.exec('CREATE TABLE IF NOT EXISTS hardlooptijden (date date, distance numeric, run_time time without time zone, comments text)');
 
       // Insert data into the in-memory database
+      const stmt = db.prepare(`INSERT INTO hardlooptijden VALUES (?, ?, ?, ?)`);
       data.forEach(record => {
-        const { date, distance, run_time } = record;
-        db.exec(`INSERT INTO hardlooptijden VALUES ('${date}', '${distance}', '${run_time}')`);
+        const { date, distance, run_time, comments } = record;
+        stmt.run([date, distance, run_time, comments]);
       });
+      stmt.free();
 
       // Update the store with the populated in-memory database
       dataStore.set(db);

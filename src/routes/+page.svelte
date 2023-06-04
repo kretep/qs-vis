@@ -4,21 +4,6 @@
 
   let container;
 
-  const chartSpec = {
-    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-    "width": 800,
-    "height": 600,
-    "padding": 5,
-    "encoding": {
-      "x": {
-        "field": "date",
-        "type": "temporal",
-        "axis": {"format": "%Y-%m-%d", "labelAngle": 45}
-      },
-      "y": {"field": "speed", "type": "quantitative"}
-    },
-    "mark": "point"
-  };
 
   let database;
   let jsonArray;
@@ -31,7 +16,8 @@
         const result = database.exec(
             `SELECT date, distance, run_time, 
             STRFTIME('%H', run_time) * 3600 + STRFTIME('%M', run_time) * 60 + STRFTIME('%S', run_time) AS duration_in_seconds,
-            (3600 * distance / (STRFTIME('%H', run_time) * 3600 + STRFTIME('%M', run_time) * 60 + STRFTIME('%S', run_time))) AS speed
+            (3600 * distance / (STRFTIME('%H', run_time) * 3600 + STRFTIME('%M', run_time) * 60 + STRFTIME('%S', run_time))) AS speed,
+            comments
             FROM hardlooptijden;`);
         console.log(result);
 
@@ -51,14 +37,52 @@
         });
 
         console.log(jsonArray);
-        const spec = {
-          ...chartSpec, data: {
-            "name": "table",
-            "values": jsonArray
-          }
+
+        const chartSpec = {
+          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          "width": 800,
+          "height": 600,
+          "padding": 5,
+          "layer": [{
+            "data": {
+              "name": "table",
+              "values": jsonArray
+            },
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal",
+                "axis": {"format": "%Y-%m-%d", "labelAngle": 45}
+              },
+              "y": {"field": "speed", "type": "quantitative"}
+            },
+            "mark": {
+              "type": "point",
+              "tooltip": {"content": "data"}
+            }
+          }, {
+            "data": {
+              "values": [
+                {"year": "2015-01-01"},
+                {"year": "2016-01-01"},
+                {"year": "2017-01-01"},
+                {"year": "2018-01-01"},
+                {"year": "2019-01-01"},
+                {"year": "2020-01-01"},
+                {"year": "2021-01-01"},
+                {"year": "2022-01-01"},
+                {"year": "2023-01-01"},
+                {"year": "2024-01-01"}
+              ]
+            },
+            "mark": {"type": "rule", "color": "black", "size": 2},
+            "encoding": {
+              "x": {"field": "year", "type": "temporal", "axis": {}},
+              "y": {"value": 0}
+            }
+          }]
         };
-        console.log(spec);
-        vegaEmbed(container, spec, { actions: false });
+        vegaEmbed(container, chartSpec, { actions: false });
       }
     });
 
