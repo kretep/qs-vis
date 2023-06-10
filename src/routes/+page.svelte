@@ -16,7 +16,7 @@
         const result = database.exec(
             `SELECT date, distance, run_time, 
             STRFTIME('%H', run_time) * 3600 + STRFTIME('%M', run_time) * 60 + STRFTIME('%S', run_time) AS duration_in_seconds,
-            (3600 * distance / (STRFTIME('%H', run_time) * 3600 + STRFTIME('%M', run_time) * 60 + STRFTIME('%S', run_time))) AS speed,
+            (1.0 * (STRFTIME('%H', run_time) * 3600 + STRFTIME('%M', run_time) * 60 + STRFTIME('%S', run_time)) / distance / 60) AS speed,
             comments
             FROM hardlooptijden;`);
         console.log(result);
@@ -54,7 +54,15 @@
                 "type": "temporal",
                 "axis": {"format": "%Y-%m-%d", "labelAngle": 45}
               },
-              "y": {"field": "speed", "type": "quantitative"}
+              "y": {
+                "field": "speed",
+                "type": "quantitative",
+                "axis": {
+                  "labelExpr": "datum.value === null ? null : timeFormat(datum.value * 60 * 1000, '%M:%S', 'utc')",
+                  "tickMinStep": {"seconds": 1},
+                  "scale": {"zero": false}
+                }
+              }
             },
             "mark": {
               "type": "point",
